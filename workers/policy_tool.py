@@ -164,21 +164,21 @@ def analyze_policy(task: str, chunks: list) -> dict:
     # analysis = response.choices[0].message.content
 
     analysis = "Analyzed via rule-based policy check."
-    if chunks:
-        try:
-            from openai import OpenAI
-            client = OpenAI()
-            response = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": ("Bạn là policy analyst. CHỈ dùng context được cung cấp. Nếu context không đủ, trả lời: 'Không đủ evidence'. Không được bịa rule ngoài context.")},
-                    {"role": "user", "content": f"Task: {task}\n\nContext:\n" + "\n".join([c['text'] for c in chunks])}
-                ],
-                temperature=0,
-            )
-            analysis = "Analyzed via rule-based policy check. LLM supplementary analysis: " + response.choices[0].message.content
-        except Exception:
-            pass
+    # if chunks:
+    #     try:
+    #         from openai import OpenAI
+    #         client = OpenAI()
+    #         response = client.chat.completions.create(
+    #             model="gpt-4o-mini",
+    #             messages=[
+    #                 {"role": "system", "content": ("Bạn là policy analyst. CHỈ dùng context được cung cấp. Nếu context không đủ, trả lời: 'Không đủ evidence'. Không được bịa rule ngoài context.")},
+    #                 {"role": "user", "content": f"Task: {task}\n\nContext:\n" + "\n".join([c['text'] for c in chunks])}
+    #             ],
+    #             temperature=0,
+    #         )
+    #         analysis = "Analyzed via rule-based policy check. LLM supplementary analysis: " + response.choices[0].message.content
+    #     except Exception:
+    #         pass
 
 
     sources = list({c.get("source", "unknown") for c in chunks if c})
