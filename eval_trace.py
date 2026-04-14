@@ -253,7 +253,7 @@ def compare_single_vs_multi(
     # TODO: Load Day 08 results nếu có
     # Nếu không có, dùng baseline giả lập để format
     day08_baseline = {
-        "total_questions": 10,
+        "total_questions": 15,
         "avg_confidence": 0.83,          
         "avg_latency_ms": 2547.71,           
         "abstain_rate": 0.33,            
