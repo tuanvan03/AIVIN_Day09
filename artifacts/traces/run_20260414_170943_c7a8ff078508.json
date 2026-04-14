@@ -1,0 +1,106 @@
+{
+  "task": "Ticket P1 được tạo lúc 22:47. Ai sẽ nhận thông báo đầu tiên và qua kênh nào? Escalation xảy ra lúc mấy giờ?",
+  "route_reason": "retrieval keyword matched ('p1'). ",
+  "risk_high": false,
+  "needs_tool": false,
+  "hitl_triggered": false,
+  "retrieved_chunks": [
+    {
+      "text": "Ticket P1:\n- Phản hồi ban đầu (first response): 15 phút kể từ khi ticket được tạo.\n- Xử lý và khắc phục (resolution): 4 giờ.\n- Escalation: Tự động escalate lên Senior Engineer nếu không có phản hồi trong 10 phút.\n- Thông báo stakeholder: Ngay khi nhận ticket, update mỗi 30 phút cho đến khi resolve.\n\nTicket P2:\n- Phản hồi ban đầu: 2 giờ.\n- Xử lý và khắc phục: 1 ngày làm việc.\n- Escalation: Tự động escalate sau 90 phút không có phản hồi.\n\nTicket P3:\n- Phản hồi ban đầu: 1 ngày làm việc.\n- Xử lý và khắc phục: 5 ngày làm việc.\n\nTicket P4:\n- Phản hồi ban đầu: 3 ngày làm việc.\n- Xử lý và khắc phục: Theo sprint cycle (thông thường 2-4 tuần).",
+      "source": "support/sla-p1-2026.pdf",
+      "metadata": {
+        "access": "internal",
+        "section": "Phần 2: SLA theo mức độ ưu tiên",
+        "department": "IT",
+        "effective_date": "2026-01-15",
+        "source": "support/sla-p1-2026.pdf"
+      },
+      "score": 0.01639344262295082
+    },
+    {
+      "text": "Bước 1: Tiếp nhận\nOn-call engineer nhận alert hoặc ticket, xác nhận severity trong 5 phút.\n\nBước 2: Thông báo\nGửi thông báo tới Slack #incident-p1 và email incident@company.internal ngay lập tức.\n\nBước 3: Triage và phân công\nLead Engineer phân công engineer xử lý trong 10 phút.\n\nBước 4: Xử lý\nEngineer cập nhật tiến độ lên ticket mỗi 30 phút. Nếu cần hỗ trợ thêm, escalate ngay.\n\nBước 5: Resolution\nSau khi khắc phục, viết incident report trong vòng 24 giờ.",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.01634920634920635,
+      "metadata": {
+        "source": "support/sla-p1-2026.pdf",
+        "effective_date": "2026-01-15",
+        "section": "Phần 3: Quy trình xử lý sự cố P1",
+        "access": "internal",
+        "department": "IT"
+      }
+    },
+    {
+      "text": "Q: Phần mềm VPN nào công ty dùng?\nA: Công ty sử dụng Cisco AnyConnect. Download tại https://vpn.company.internal/download.\n\nQ: Tôi bị mất kết nối VPN liên tục, phải làm gì?\nA: Kiểm tra kết nối Internet trước. Nếu vẫn lỗi, tạo ticket P3 với log file VPN đính kèm.\n\nQ: VPN có giới hạn số thiết bị không?\nA: Mỗi tài khoản được kết nối VPN trên tối đa 2 thiết bị cùng lúc.",
+      "source": "support/helpdesk-faq.md",
+      "metadata": {
+        "department": "IT",
+        "source": "support/helpdesk-faq.md",
+        "effective_date": "2026-01-20",
+        "section": "Section 2: VPN và kết nối từ xa",
+        "access": "internal"
+      },
+      "score": 0.01619047619047619
+    }
+  ],
+  "retrieved_sources": [
+    "support/sla-p1-2026.pdf",
+    "support/helpdesk-faq.md"
+  ],
+  "policy_result": {},
+  "mcp_tools_used": [],
+  "final_answer": "1. **Người nhận thông báo đầu tiên**: On-call engineer sẽ nhận thông báo đầu tiên.  \n   **Kênh thông báo**: Thông báo được gửi tới Slack #incident-p1 và email incident@company.internal ngay lập tức. [2]\n\n2. **Thời gian Escalation**: Escalation sẽ xảy ra tự động sau 10 phút nếu không có phản hồi. Do ticket P1 được tạo lúc 22:47, escalation sẽ xảy ra lúc 22:57. [1]",
+  "sources": [
+    "support/sla-p1-2026.pdf",
+    "support/helpdesk-faq.md"
+  ],
+  "confidence": 0.93,
+  "history": [
+    "[supervisor] received task: Ticket P1 được tạo lúc 22:47. Ai sẽ nhận thông báo đầu tiên và qua kênh nào? Esc",
+    "[supervisor] route=retrieval_worker reason=retrieval keyword matched ('p1'). ",
+    "[retrieval_worker] retrieved 3 chunks from ['support/sla-p1-2026.pdf', 'support/helpdesk-faq.md']",
+    "[synthesis_worker] answer generated, confidence=0.93, sources=['support/sla-p1-2026.pdf', 'support/helpdesk-faq.md']",
+    "[graph] completed in 4156ms"
+  ],
+  "workers_called": [
+    "retrieval_worker",
+    "synthesis_worker"
+  ],
+  "supervisor_route": "retrieval_worker",
+  "latency_ms": 4156,
+  "run_id": "run_20260414_170943_c7a8ff078508",
+  "worker_io_logs": [
+    {
+      "worker": "retrieval_worker",
+      "input": {
+        "task": "Ticket P1 được tạo lúc 22:47. Ai sẽ nhận thông báo đầu tiên và qua kênh nào? Escalation xảy ra lúc mấy giờ?",
+        "top_k": 3
+      },
+      "output": {
+        "chunks_count": 3,
+        "sources": [
+          "support/sla-p1-2026.pdf",
+          "support/helpdesk-faq.md"
+        ]
+      },
+      "error": null
+    },
+    {
+      "worker": "synthesis_worker",
+      "input": {
+        "task": "Ticket P1 được tạo lúc 22:47. Ai sẽ nhận thông báo đầu tiên và qua kênh nào? Escalation xảy ra lúc mấy giờ?",
+        "chunks_count": 3,
+        "has_policy": false
+      },
+      "output": {
+        "answer_length": 365,
+        "sources": [
+          "support/sla-p1-2026.pdf",
+          "support/helpdesk-faq.md"
+        ],
+        "confidence": 0.93
+      },
+      "error": null
+    }
+  ],
+  "question_id": "q11"
+}

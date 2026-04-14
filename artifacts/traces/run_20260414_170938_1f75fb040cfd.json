@@ -1,0 +1,108 @@
+{
+  "task": "ERR-403-AUTH là lỗi gì và cách xử lý?",
+  "route_reason": "unknown error code + risk_high → human review.  | human approved → retrieval",
+  "risk_high": true,
+  "needs_tool": false,
+  "hitl_triggered": true,
+  "retrieved_chunks": [
+    {
+      "text": "Bước 1: Nhân viên tạo Access Request ticket trên Jira (project IT-ACCESS).\nBước 2: Line Manager phê duyệt yêu cầu trong 1 ngày làm việc.\nBước 3: IT Admin kiểm tra compliance và cấp quyền.\nBước 4: IT Security review với Level 3 và Level 4.\nBước 5: Nhân viên nhận thông báo qua email khi quyền được cấp.",
+      "source": "it/access-control-sop.md",
+      "score": 0.01634920634920635,
+      "metadata": {
+        "effective_date": "2026-01-01",
+        "department": "IT Security",
+        "section": "Section 3: Quy trình yêu cầu cấp quyền",
+        "source": "it/access-control-sop.md",
+        "access": "internal"
+      }
+    },
+    {
+      "text": "Q: Hộp thư đến đầy, phải làm gì?\nA: Xóa email cũ hoặc yêu cầu tăng dung lượng qua ticket IT-ACCESS. Dung lượng tiêu chuẩn là 50GB.\n\nQ: Tôi không nhận được email từ bên ngoài?\nA: Kiểm tra thư mục Spam trước. Nếu vẫn không có, tạo ticket P2 kèm địa chỉ email gửi và thời gian gửi.",
+      "source": "support/helpdesk-faq.md",
+      "metadata": {
+        "effective_date": "2026-01-20",
+        "access": "internal",
+        "department": "IT",
+        "source": "support/helpdesk-faq.md",
+        "section": "Section 5: Email và lịch"
+      },
+      "score": 0.01619047619047619
+    },
+    {
+      "text": "IT Security thực hiện access review mỗi 6 tháng.\nMọi bất thường phải được báo cáo lên CISO trong vòng 24 giờ.",
+      "source": "it/access-control-sop.md",
+      "score": 0.016185271922976842,
+      "metadata": {
+        "department": "IT Security",
+        "access": "internal",
+        "effective_date": "2026-01-01",
+        "source": "it/access-control-sop.md",
+        "section": "Section 6: Audit và review định kỳ"
+      }
+    }
+  ],
+  "retrieved_sources": [
+    "it/access-control-sop.md",
+    "support/helpdesk-faq.md"
+  ],
+  "policy_result": {},
+  "mcp_tools_used": [],
+  "final_answer": "Không đủ thông tin trong tài liệu nội bộ.",
+  "sources": [
+    "it/access-control-sop.md",
+    "support/helpdesk-faq.md"
+  ],
+  "confidence": 0.55,
+  "history": [
+    "[supervisor] received task: ERR-403-AUTH là lỗi gì và cách xử lý?",
+    "[supervisor] route=human_review reason=unknown error code + risk_high → human review. ",
+    "[human_review] HITL triggered — awaiting human input",
+    "[retrieval_worker] retrieved 3 chunks from ['it/access-control-sop.md', 'support/helpdesk-faq.md']",
+    "[synthesis_worker] answer generated, confidence=0.55, sources=['it/access-control-sop.md', 'support/helpdesk-faq.md']",
+    "[graph] completed in 2454ms"
+  ],
+  "workers_called": [
+    "human_review",
+    "retrieval_worker",
+    "synthesis_worker"
+  ],
+  "supervisor_route": "retrieval_worker",
+  "latency_ms": 2454,
+  "run_id": "run_20260414_170938_1f75fb040cfd",
+  "worker_io_logs": [
+    {
+      "worker": "retrieval_worker",
+      "input": {
+        "task": "ERR-403-AUTH là lỗi gì và cách xử lý?",
+        "top_k": 3
+      },
+      "output": {
+        "chunks_count": 3,
+        "sources": [
+          "it/access-control-sop.md",
+          "support/helpdesk-faq.md"
+        ]
+      },
+      "error": null
+    },
+    {
+      "worker": "synthesis_worker",
+      "input": {
+        "task": "ERR-403-AUTH là lỗi gì và cách xử lý?",
+        "chunks_count": 3,
+        "has_policy": false
+      },
+      "output": {
+        "answer_length": 41,
+        "sources": [
+          "it/access-control-sop.md",
+          "support/helpdesk-faq.md"
+        ],
+        "confidence": 0.55
+      },
+      "error": null
+    }
+  ],
+  "question_id": "q09"
+}
