@@ -102,7 +102,7 @@ def supervisor_node(state: AgentState) -> AgentState:
     # - còn lại → retrieval_worker
 
     route = "retrieval_worker"         # TODO: thay bằng logic thực
-    route_reason = "default route"    # TODO: thay bằng lý do thực
+    route_reason = "default route "    # TODO: thay bằng lý do thực
     needs_tool = False
     risk_high = False
 
@@ -115,26 +115,26 @@ def supervisor_node(state: AgentState) -> AgentState:
     if any(kw in task for kw in policy_keywords):
         route = "policy_tool_worker"
         matched_pk = next(kw for kw in policy_keywords if kw in task)                                        
-        route_reason = f"policy keyword matched ('{matched_pk}')"                                            
+        route_reason = f"policy keyword matched ('{matched_pk}'). "                                            
         needs_tool = True
     elif any(kw in task for kw in retrieval_keywords):                                                      
         route = "retrieval_worker"
         matched_rk = next(kw for kw in retrieval_keywords if kw in task)
-        route_reason = f"retrieval keyword matched ('{matched_rk}')"
+        route_reason = f"retrieval keyword matched ('{matched_rk}'). "
 
     if any(kw in task for kw in risk_keywords):
         risk_high = True
-        route_reason += " | risk_high flagged"
+        route_reason += " | risk_high flagged. "
 
     unknown_err = unknown_err_re.search(task)
     if unknown_err:
         risk_high = True
-        route_reason += f" | unknown_error='{unknown_err.group(0)}'"
+        route_reason += f" | unknown_error='{unknown_err.group(0)}'. "
 
     # Human review override
     if risk_high and ("err-" in task or unknown_err):
         route = "human_review"
-        route_reason = "unknown error code + risk_high → human review"
+        route_reason = "unknown error code + risk_high → human review. "
 
     state["supervisor_route"] = route
     state["route_reason"] = route_reason

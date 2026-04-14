@@ -185,9 +185,10 @@ def analyze_traces(traces_dir: str = "artifacts/traces") -> dict:
 
     traces = []
     for fname in trace_files:
-        with open(os.path.join(traces_dir, fname)) as f:
+        # with open(os.path.join(traces_dir, fname)) as f:
+        #     traces.append(json.load(f))
+        with open(os.path.join(traces_dir, fname), 'r', encoding='utf-8') as f:
             traces.append(json.load(f))
-
     # Compute metrics
     routing_counts = {}
     confidences = []
@@ -252,7 +253,7 @@ def compare_single_vs_multi(
     # TODO: Load Day 08 results nếu có
     # Nếu không có, dùng baseline giả lập để format
     day08_baseline = {
-        "total_questions": 15,
+        "total_questions": 10,
         "avg_confidence": 0.0,          # TODO: Điền từ Day 08 eval.py
         "avg_latency_ms": 0,            # TODO: Điền từ Day 08
         "abstain_rate": "?",            # TODO: Điền từ Day 08
