@@ -239,6 +239,8 @@ def run(state: dict) -> dict:
             if mcp_result.get("output") and mcp_result["output"].get("chunks"):
                 chunks = mcp_result["output"]["chunks"]
                 state["retrieved_chunks"] = chunks
+        else:
+            state["route_reason"] = state["route_reason"] + "Didn't choose MCP search_kb."
 
         # Step 2: Phân tích policy
         policy_result = analyze_policy(task, chunks)
@@ -250,7 +252,10 @@ def run(state: dict) -> dict:
             state["mcp_tools_used"].append(mcp_result)
             state["history"].append(f"[{WORKER_NAME}] called MCP get_ticket_info")
             state["route_reason"] = state["route_reason"] + "Choosed MCP get_ticket_info. "
-
+        else:
+            state["route_reason"] = state["route_reason"] + "Didn't choose MCP get_ticket_info."
+        
+        
         worker_io["output"] = {
             "policy_applies": policy_result["policy_applies"],
             "exceptions_count": len(policy_result.get("exceptions_found", [])),
@@ -265,6 +270,7 @@ def run(state: dict) -> dict:
         worker_io["error"] = {"code": "POLICY_CHECK_FAILED", "reason": str(e)}
         state["policy_result"] = {"error": str(e)}
         state["history"].append(f"[{WORKER_NAME}] ERROR: {e}")
+        state["route_reason"] = state["route_reason"] + "Didn't choose MCP. "
 
     state.setdefault("worker_io_logs", []).append(worker_io)
     return state
