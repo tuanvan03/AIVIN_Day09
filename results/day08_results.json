@@ -1,0 +1,7 @@
+{
+    "total_questions": 15,
+    "avg_confidence": 0.83,
+    "avg_latency_ms": 2547.71,
+    "abstain_rate": 0.33,
+    "multi_hop_accuracy": 0.72
+}
