@@ -17,7 +17,9 @@ Gọi độc lập để test:
 """
 
 import os
+import re
 import sys
+from datetime import datetime
 from typing import Optional
 
 WORKER_NAME = "policy_tool_worker"
@@ -84,7 +86,8 @@ def analyze_policy(task: str, chunks: list) -> dict:
     exceptions_found = []
 
     # Exception 1: Flash Sale
-    if "flash sale" in task_lower or "flash sale" in context_text:
+    flash_kw = ("flash sale", "flash-sale", "flashsale", "sale chớp nhoáng", "giảm giá chớp nhoáng", "đợt sale", "sale sốc")
+    if any(k in task_lower for k in flash_kw) or any(k in context_text for k in flash_kw):
         exceptions_found.append({
             "type": "flash_sale_exception",
             "rule": "Đơn hàng Flash Sale không được hoàn tiền (Điều 3, chính sách v4).",
@@ -92,7 +95,12 @@ def analyze_policy(task: str, chunks: list) -> dict:
         })
 
     # Exception 2: Digital product
-    if any(kw in task_lower for kw in ["license key", "license", "subscription", "kỹ thuật số"]):
+    digital_kw = (
+        "license key", "license", "subscription", "kỹ thuật số",
+        "digital", "phần mềm", "software", "mã kích hoạt",
+        "key bản quyền", "sản phẩm số"
+    )
+    if any(kw in task_lower for kw in digital_kw):
         exceptions_found.append({
             "type": "digital_product_exception",
             "rule": "Sản phẩm kỹ thuật số (license key, subscription) không được hoàn tiền (Điều 3).",
@@ -100,7 +108,12 @@ def analyze_policy(task: str, chunks: list) -> dict:
         })
 
     # Exception 3: Activated product
-    if any(kw in task_lower for kw in ["đã kích hoạt", "đã đăng ký", "đã sử dụng"]):
+    activated_kw = (
+        "đã kích hoạt", "đã đăng ký", "đã sử dụng", "activated",
+        "đã dùng", "đã mở", "đã khởi tạo", "đã nhập key",
+        "đã redeem", "redeemed", "tài khoản đã tạo", "đã active"
+    )
+    if any(kw in task_lower for kw in activated_kw):
         exceptions_found.append({
             "type": "activated_exception",
             "rule": "Sản phẩm đã kích hoạt hoặc đăng ký tài khoản không được hoàn tiền (Điều 3).",
@@ -114,8 +127,28 @@ def analyze_policy(task: str, chunks: list) -> dict:
     # TODO: Check nếu đơn hàng trước 01/02/2026 → v3 applies (không có docs, nên flag cho synthesis)
     policy_name = "refund_policy_v4"
     policy_version_note = ""
-    if "31/01" in task_lower or "30/01" in task_lower or "trước 01/02" in task_lower:
+    v3_phrases = (
+        "31/01", "30/01", "29/01", "28/01",
+        "trước 01/02", "trước 1/2", "trước 01/02/2026", "trước 1/2/2026",
+        "tháng 1/2026", "tháng 01/2026", "january 2026",
+        "policy v3", "chính sách v3", "chính sách cũ", "policy cũ"
+    )
+    if any(p in task_lower for p in v3_phrases):
         policy_version_note = "Đơn hàng đặt trước 01/02/2026 áp dụng chính sách v3 (không có trong tài liệu hiện tại)."
+    
+    if not policy_version_note:
+        m = re.search(r"(\d{1,2})[/-](\d{1,2})[/-](\d{4})", task)
+        if m:
+            try:
+                d, mo, y = map(int, m.groups())
+                order_date = datetime(y, mo, d)
+                if order_date < datetime(2026, 2, 1):
+                    policy_version_note = (
+                        f"Đơn ngày {order_date.strftime('%d/%m/%Y')} áp dụng chính sách v3 "
+                        f"(không có trong tài liệu hiện tại)."
+                    )
+            except ValueError:
+                pass
 
     # TODO Sprint 2: Gọi LLM để phân tích phức tạp hơn
     # Ví dụ:
@@ -130,6 +163,24 @@ def analyze_policy(task: str, chunks: list) -> dict:
     # )
     # analysis = response.choices[0].message.content
 
+    analysis = "Analyzed via rule-based policy check."
+    if chunks:
+        try:
+            from openai import OpenAI
+            client = OpenAI()
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": ("Bạn là policy analyst. CHỈ dùng context được cung cấp. Nếu context không đủ, trả lời: 'Không đủ evidence'. Không được bịa rule ngoài context.")},
+                    {"role": "user", "content": f"Task: {task}\n\nContext:\n" + "\n".join([c['text'] for c in chunks])}
+                ],
+                temperature=0,
+            )
+            analysis = "Analyzed via rule-based policy check. LLM supplementary analysis: " + response.choices[0].message.content
+        except Exception:
+            pass
+
+
     sources = list({c.get("source", "unknown") for c in chunks if c})
 
     return {
@@ -138,7 +189,7 @@ def analyze_policy(task: str, chunks: list) -> dict:
         "exceptions_found": exceptions_found,
         "source": sources,
         "policy_version_note": policy_version_note,
-        "explanation": "Analyzed via rule-based policy check. TODO: upgrade to LLM-based analysis.",
+        "explanation": analysis,
     }
 
 
