@@ -11,6 +11,8 @@ Chạy thử:
 
 import json
 import os
+import uuid
+import re
 from datetime import datetime
 from typing import TypedDict, Literal, Optional
 
@@ -69,7 +71,9 @@ def make_initial_state(task: str) -> AgentState:
         "workers_called": [],
         "supervisor_route": "",
         "latency_ms": None,
-        "run_id": f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+        # Bug - đã fix. run_id sử dụng để đặt tên file
+        # Nếu chương trình chạy quá nhanh -> run_id trùng -> câu sau đè câu trước
+        "run_id": f"run_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:12]}",
     }
 
 
@@ -105,18 +109,30 @@ def supervisor_node(state: AgentState) -> AgentState:
     # Ví dụ routing cơ bản — nhóm phát triển thêm:
     policy_keywords = ["hoàn tiền", "refund", "flash sale", "license", "cấp quyền", "access", "level 3"]
     risk_keywords = ["emergency", "khẩn cấp", "2am", "không rõ", "err-"]
+    retrieval_keywords = ["p1", "p2", "sla", "escalation", "ticket", "helpdesk", "faq", "nghỉ phép", "sop"] 
+    unknown_err_re = re.compile(r"\berr[-_]?[a-z0-9]{2,}\b", re.IGNORECASE)
 
     if any(kw in task for kw in policy_keywords):
         route = "policy_tool_worker"
-        route_reason = f"task contains policy/access keyword"
+        matched_pk = next(kw for kw in policy_keywords if kw in task)                                        
+        route_reason = f"policy keyword matched ('{matched_pk}')"                                            
         needs_tool = True
+    elif any(kw in task for kw in retrieval_keywords):                                                      
+        route = "retrieval_worker"
+        matched_rk = next(kw for kw in retrieval_keywords if kw in task)
+        route_reason = f"retrieval keyword matched ('{matched_rk}')"
 
     if any(kw in task for kw in risk_keywords):
         risk_high = True
         route_reason += " | risk_high flagged"
 
+    unknown_err = unknown_err_re.search(task)
+    if unknown_err:
+        risk_high = True
+        route_reason += f" | unknown_error='{unknown_err.group(0)}'"
+
     # Human review override
-    if risk_high and "err-" in task:
+    if risk_high and ("err-" in task or unknown_err):
         route = "human_review"
         route_reason = "unknown error code + risk_high → human review"
 
