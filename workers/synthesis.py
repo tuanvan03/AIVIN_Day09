@@ -17,6 +17,8 @@ Gọi độc lập để test:
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
 
 WORKER_NAME = "synthesis_worker"
 
@@ -36,7 +38,7 @@ def _call_llm(messages: list) -> str:
     Gọi LLM để tổng hợp câu trả lời.
     TODO Sprint 2: Implement với OpenAI hoặc Gemini.
     """
-    # Option A: OpenAI
+
     try:
         from openai import OpenAI
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -49,20 +51,6 @@ def _call_llm(messages: list) -> str:
         return response.choices[0].message.content
     except Exception:
         pass
-
-    # Option B: Gemini
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-        model = genai.GenerativeModel("gemini-1.5-flash")
-        combined = "\n".join([m["content"] for m in messages])
-        response = model.generate_content(combined)
-        return response.text
-    except Exception:
-        pass
-
-    # Fallback: trả về message báo lỗi (không hallucinate)
-    return "[SYNTHESIS ERROR] Không thể gọi LLM. Kiểm tra API key trong .env."
 
 
 def _build_context(chunks: list, policy_result: dict) -> str:
@@ -88,19 +76,53 @@ def _build_context(chunks: list, policy_result: dict) -> str:
     return "\n\n".join(parts)
 
 
-def _estimate_confidence(chunks: list, answer: str, policy_result: dict) -> float:
+def _estimate_confidence(query: str, chunks: list, answer: str, policy_result: dict, using_llm: bool = False) -> float:
     """
     Ước tính confidence dựa vào:
     - Số lượng và quality của chunks
     - Có exceptions không
     - Answer có abstain không
 
-    TODO Sprint 2: Có thể dùng LLM-as-Judge để tính confidence chính xác hơn.
+    Sử dụng using_llm=True để nhờ LLM chấm điểm theo thang điểm 1-5 cho 3 tiêu chí, sau đó chuẩn hóa về [0.1, 1.0].
     """
+    if using_llm:
+        exceptions = policy_result.get("exceptions_found", [])
+        prompt = f"""Bạn là một chuyên gia đánh giá hệ thống trợ lý ảo.
+Hãy đánh giá 3 thành phần sau của kết quả dựa trên thang điểm từ 1 đến 5 (1 thấp nhất, 5 cao nhất).
+
+[THÔNG TIN]
+Câu hỏi: {query}
+Câu trả lời: {answer if answer else "None"}
+Số lượng nguồn tham khảo (chunks): {len(chunks) if chunks else 0}
+Nội dung các chunks: {chunks}
+Chính sách ngoại lệ: {exceptions}
+
+[TIÊU CHÍ ĐÁNH GIÁ]
+1. Chất lượng và số lượng nguồn tài liệu (chunks) được dùng.
+2. Việc xử lý hoặc có tồn tại các chính sách ngoại lệ (exceptions) không. (Không có ngoại lệ: 5 điểm. Có 1 ngoại lệ: 3 điểm. Nhiều hơn 1 ngoại lệ: 1 điểm).
+3. Câu trả lời có abstain không (từ chối hoặc nói "Không đủ thông tin": 1 điểm, Ngược lại trả lời rõ ràng: 5 điểm).
+
+Chỉ trả về DUY NHẤT 3 con số nguyên cách nhau bởi dấu phẩy, ví dụ: 4,5,3. KHÔNG trả lời thêm bất cứ văn bản nào khác.
+"""
+        try:
+            llm_response = _call_llm([{"role": "user", "content": prompt}])
+            if llm_response:
+                scores = [int(s.strip()) for s in llm_response.split(",")]
+                # print("scores", scores)
+                if len(scores) == 3:
+                    avg_score = sum(scores) / 3.0
+                    # Chuẩn hóa từ [1, 5] về [0.1, 1.0]
+                    confidence = 0.1 + (avg_score - 1) * (0.9 / 4.0)
+                    return round(max(0.1, min(1.0, confidence)), 2)
+        except Exception:
+            pass # Fallback về heuristic nếu quá trình gọi LLM lỗi hoặc sai format
+
+    
+    # Heuristic mặc định / Fallback - Không sử dụng LLM đánh giá confidence
     if not chunks:
         return 0.1  # Không có evidence → low confidence
 
-    if "Không đủ thông tin" in answer or "không có trong tài liệu" in answer.lower():
+    if answer is None or "Không đủ thông tin" in answer or "không có trong tài liệu" in answer.lower():
         return 0.3  # Abstain → moderate-low
 
     # Weighted average của chunk scores
@@ -140,7 +162,7 @@ Hãy trả lời câu hỏi dựa vào tài liệu trên."""
 
     answer = _call_llm(messages)
     sources = list({c.get("source", "unknown") for c in chunks})
-    confidence = _estimate_confidence(chunks, answer, policy_result)
+    confidence = _estimate_confidence(task, chunks, answer, policy_result, using_llm=True)
 
     return {
         "answer": answer,
@@ -191,6 +213,7 @@ def run(state: dict) -> dict:
     except Exception as e:
         worker_io["error"] = {"code": "SYNTHESIS_FAILED", "reason": str(e)}
         state["final_answer"] = f"SYNTHESIS_ERROR: {e}"
+        state["sources"] = []
         state["confidence"] = 0.0
         state["history"].append(f"[{WORKER_NAME}] ERROR: {e}")
 
